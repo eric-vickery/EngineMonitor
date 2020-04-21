@@ -194,6 +194,24 @@ class EngineData: ObservableObject {
         self.dataLastReceivedTime = Date()
         self.healthStatus = .healthy
         self.currentValues["health"] = self.healthStatus
+        
+        let egt1 = Helper.currentValueAsString(self.egtValues[0])
+        let egt2 = Helper.currentValueAsString(self.egtValues[1])
+        let egt3 = Helper.currentValueAsString(self.egtValues[2])
+        let egt4 = Helper.currentValueAsString(self.egtValues[3])
+        let cht1 = Helper.currentValueAsString(self.chtValues[0])
+        let cht2 = Helper.currentValueAsString(self.chtValues[1])
+        let cht3 = Helper.currentValueAsString(self.chtValues[2])
+        let cht4 = Helper.currentValueAsString(self.chtValues[3])
+        let oilTemp = Helper.currentValueAsString(self.oilTemp)
+        let oilPressure = Helper.currentValueAsString(self.oilPressure)
+        let rpm = Helper.currentValueAsString(self.tach)
+        let oat = Helper.currentValueAsString(self.outsideAirTemp)
+        let map = Helper.currentValueAsString(self.manifoldPressure)
+        let fuelFlow = Helper.currentValueAsString(self.fuelFlow)
+        let voltage = Helper.currentValueAsString(self.volts)
+
+        Logger.sharedInstance.writeToLog(egt1: egt1, egt2: egt2, egt3: egt3, egt4: egt4, cht1: cht1, cht2: cht2, cht3: cht3, cht4: cht4, oilTemp: oilTemp, oilPressure: oilPressure, rpm: rpm, oat: oat, map: map, fuelFlow: fuelFlow, voltage: voltage)
     }
 }
 

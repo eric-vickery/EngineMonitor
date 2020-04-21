@@ -9,29 +9,77 @@
 import Foundation
 
 class Logger {
+    static let sharedInstance = Logger()
     
     var containerUrl: URL? {
-        return FileManager.default.url(forUbiquityContainerIdentifier: nil)?.appendingPathComponent("Documents")
+        return FileManager.default.url(forUbiquityContainerIdentifier: nil)?.appendingPathComponent("Documents").appendingPathComponent("EngineMonitor")
     }
     
-    func setup() -> Void {
+    var logFileUrl: URL
+    
+    init() {
+        // Dummy Initializer here. Gets actually initialized in createLogFileIfNotExists
+        self.logFileUrl = URL(fileURLWithPath: "")
+        
         // check for container existence
-        if let url = self.containerUrl, !FileManager.default.fileExists(atPath: url.path, isDirectory: nil) {
-            do {
-                try FileManager.default.createDirectory(at: url, withIntermediateDirectories: true, attributes: nil)
+        if let url = self.containerUrl {
+            if !FileManager.default.fileExists(atPath: url.path, isDirectory: nil) {
+                do {
+                    try FileManager.default.createDirectory(at: url, withIntermediateDirectories: true, attributes: nil)
+                }
+                catch {
+                    print(error.localizedDescription)
+                }
             }
-            catch {
-                print(error.localizedDescription)
+            
+            createLogFileIfNotExists()
+        }
+    }
+    
+    func createLogFileIfNotExists() {
+        let logFileName = getLogFileName()
+        if let logFileUrl = self.containerUrl?.appendingPathComponent(logFileName)
+        {
+            self.logFileUrl = logFileUrl
+            if !FileManager.default.fileExists(atPath: self.logFileUrl.path, isDirectory: nil) {
+                do {
+                    try "Avidyne Engine Data Log   This is Eric's format - not an actual Avidyne. Reach me at eric@fiedlervickery.com\n".write(to: self.logFileUrl, atomically: true, encoding: .utf8)
+                }
+                catch {
+                    print(error.localizedDescription)
+                }
+                let dateFormatter = DateFormatter()
+                dateFormatter.dateFormat = "MM/dd/yy HH:mm:ss"
+                writeToLog(dateFormatter.string(from: Date()) + "\n")
+                writeToLog( "\"TIME\",\"LAT\",\"LON\",\"PALT\",\"E1\",\"E2\",\"E3\",\"E4\",\"C1\",\"C2\",\"C3\",\"C4\",\"OILT\",\"OILP\",\"RPM\",\"OAT\",\"MAP\",\"FF\",\"USED\",\"AMPL\",\"AMPR\",\"LBUS\",\"RBUS\",\"TIT\"\n")
             }
         }
     }
     
-    func writeToLog() {
-        let myDocumentUrl = self.containerUrl?
-            .appendingPathComponent("logs")
-        .appendingPathComponent("test")
-        .appendingPathExtension("csv")
-        
-        "test".write(to: myDocumentUrl!, atomically: true, encoding: .utf8)
+    func getLogFileName() -> String {
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "yyy-MM-dd"
+        return dateFormatter.string(from: Date()) + ".log"
+    }
+    
+    func writeToLog(_ message: String) {
+        do {
+            let fileHandle = try FileHandle(forUpdating: self.logFileUrl)
+            fileHandle.seekToEndOfFile()
+            fileHandle.write(message.data(using: .utf8)!)
+            fileHandle.closeFile()
+        }
+        catch {
+            print(error.localizedDescription)
+        }
+    }
+    
+    func writeToLog(egt1: String, egt2: String, egt3: String, egt4: String, cht1: String, cht2: String, cht3: String, cht4: String, oilTemp: String, oilPressure: String,
+                    rpm: String, oat: String, map: String, fuelFlow: String, voltage: String) {
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "HH:mm:ss"
+        let message = String(format: "%s,0,0,0,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,0,0,0,%s,0,0\n", dateFormatter.string(from: Date()), egt1, egt2, egt3, egt4, cht1, cht2, cht3, cht4,
+                             oilTemp, oilPressure, rpm, oat, map, fuelFlow, voltage)
+        writeToLog(message)
     }
 }
