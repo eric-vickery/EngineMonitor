@@ -16,11 +16,14 @@ class Logger {
     }
     
     var logFileUrl: URL
+    var dateFormatter = DateFormatter()
     
     init() {
         // Dummy Initializer here. Gets actually initialized in createLogFileIfNotExists
         self.logFileUrl = URL(fileURLWithPath: "")
         
+        dateFormatter.timeZone = TimeZone(identifier: "UTC")
+
         // check for container existence
         if let url = self.containerUrl {
             if !FileManager.default.fileExists(atPath: url.path, isDirectory: nil) {
@@ -57,7 +60,6 @@ class Logger {
     }
     
     func getLogFileName() -> String {
-        let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = "yyy-MM-dd"
         return dateFormatter.string(from: Date()) + ".log"
     }
@@ -76,10 +78,9 @@ class Logger {
     
     func writeToLog(egt1: String, egt2: String, egt3: String, egt4: String, cht1: String, cht2: String, cht3: String, cht4: String, oilTemp: String, oilPressure: String,
                     rpm: String, oat: String, map: String, fuelFlow: String, voltage: String) {
-        let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = "HH:mm:ss"
-        let message = String(format: "%s,0,0,0,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,0,0,0,%s,0,0\n", dateFormatter.string(from: Date()), egt1, egt2, egt3, egt4, cht1, cht2, cht3, cht4,
-                             oilTemp, oilPressure, rpm, oat, map, fuelFlow, voltage)
+        let currentTime = dateFormatter.string(from: Date())
+        let message = String(format: "%@,0,0,0,%@,%@,%@,%@,%@,%@,%@,%@,%@,%@,%@,%@,%@,%@,0,0,0,%@,0,0\n", currentTime, egt1, egt2, egt3, egt4, cht1, cht2, cht3, cht4, oilTemp, oilPressure, rpm, oat, map, fuelFlow, voltage)
         writeToLog(message)
     }
 }

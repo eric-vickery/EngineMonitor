@@ -197,7 +197,7 @@ class EngineData: ObservableObject {
         self.currentValues["health"] = self.healthStatus
         
         // Only do logging every second
-        if self.dataLoastLoggedTime.timeIntervalSinceNow < -1 {
+        if self.dataLoastLoggedTime.timeIntervalSinceNow < -1 && UserDefaults.standard.bool(forKey: "logging_enabled") {
             let egt1 = Helper.currentValueAsString(self.egtValues[0])
             let egt2 = Helper.currentValueAsString(self.egtValues[1])
             let egt3 = Helper.currentValueAsString(self.egtValues[2])

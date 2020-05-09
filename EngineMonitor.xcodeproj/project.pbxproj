@@ -15,6 +15,7 @@
 		D016FAB2240DD2E40053D163 /* RoundGauge.swift in Sources */ = {isa = PBXBuildFile; fileRef = D016FAB1240DD2E40053D163 /* RoundGauge.swift */; };
 		D03EAAB4240ED50600F0F1F0 /* CHTEGTGauge.swift in Sources */ = {isa = PBXBuildFile; fileRef = D03EAAB3240ED50600F0F1F0 /* CHTEGTGauge.swift */; };
 		D03EAAB6240ED7CA00F0F1F0 /* EngineData.swift in Sources */ = {isa = PBXBuildFile; fileRef = D03EAAB5240ED7CA00F0F1F0 /* EngineData.swift */; };
+		D07E1F512466087700260A72 /* Settings.bundle in Resources */ = {isa = PBXBuildFile; fileRef = D07E1F502466087700260A72 /* Settings.bundle */; };
 		D09E664624073B28003CC631 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = D09E664524073B28003CC631 /* AppDelegate.swift */; };
 		D09E664824073B28003CC631 /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = D09E664724073B28003CC631 /* SceneDelegate.swift */; };
 		D09E664A24073B28003CC631 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D09E664924073B28003CC631 /* ContentView.swift */; };
@@ -53,6 +54,7 @@
 		D02FE98B242C144000540C35 /* EngineMonitor.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = EngineMonitor.entitlements; sourceTree = "<group>"; };
 		D03EAAB3240ED50600F0F1F0 /* CHTEGTGauge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CHTEGTGauge.swift; sourceTree = "<group>"; };
 		D03EAAB5240ED7CA00F0F1F0 /* EngineData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EngineData.swift; sourceTree = "<group>"; };
+		D07E1F502466087700260A72 /* Settings.bundle */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.plug-in"; path = Settings.bundle; sourceTree = "<group>"; };
 		D09E664224073B28003CC631 /* EngineMonitor.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = EngineMonitor.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		D09E664524073B28003CC631 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		D09E664724073B28003CC631 /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
@@ -142,6 +144,7 @@
 				D09E665324073B2B003CC631 /* Info.plist */,
 				D09E664D24073B2B003CC631 /* Preview Content */,
 				D03EAAB5240ED7CA00F0F1F0 /* EngineData.swift */,
+				D07E1F502466087700260A72 /* Settings.bundle */,
 			);
 			path = EngineMonitor;
 			sourceTree = "<group>";
@@ -282,6 +285,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D07E1F512466087700260A72 /* Settings.bundle in Resources */,
 				D09E665224073B2B003CC631 /* LaunchScreen.storyboard in Resources */,
 				D09E664F24073B2B003CC631 /* Preview Assets.xcassets in Resources */,
 				D09E664C24073B2B003CC631 /* Assets.xcassets in Resources */,
@@ -490,6 +494,7 @@
 				DEVELOPMENT_TEAM = CWNCTDGDL5;
 				ENABLE_PREVIEWS = YES;
 				INFOPLIST_FILE = EngineMonitor/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 13.4;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -511,6 +516,7 @@
 				DEVELOPMENT_TEAM = CWNCTDGDL5;
 				ENABLE_PREVIEWS = YES;
 				INFOPLIST_FILE = EngineMonitor/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 13.4;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
