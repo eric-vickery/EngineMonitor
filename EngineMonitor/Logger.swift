@@ -51,7 +51,6 @@ class Logger {
                 catch {
                     print(error.localizedDescription)
                 }
-                let dateFormatter = DateFormatter()
                 dateFormatter.dateFormat = "MM/dd/yy HH:mm:ss"
                 writeToLog(dateFormatter.string(from: Date()) + "\n")
                 writeToLog( "\"TIME\",\"LAT\",\"LON\",\"PALT\",\"E1\",\"E2\",\"E3\",\"E4\",\"C1\",\"C2\",\"C3\",\"C4\",\"OILT\",\"OILP\",\"RPM\",\"OAT\",\"MAP\",\"FF\",\"USED\",\"AMPL\",\"AMPR\",\"LBUS\",\"RBUS\",\"TIT\"\n")
