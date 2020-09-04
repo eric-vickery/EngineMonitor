@@ -41,6 +41,9 @@ class EngineData: ObservableObject {
     private var dataLoastLoggedTime = Date()
     
     private var udpReceiver:UDPReceiver
+    
+    private var sock:GCDAsyncUdpSocket?
+    private var healthTimer:Timer?
 
     init(createTestData: Bool = false)
     {
@@ -118,19 +121,22 @@ class EngineData: ObservableObject {
     func startData()
     {
         print("EngineData startData()")
-        let sock = GCDAsyncUdpSocket(delegate: self.udpReceiver, delegateQueue: DispatchQueue.main)
+        self.sock = GCDAsyncUdpSocket(delegate: self.udpReceiver, delegateQueue: DispatchQueue.main)
 
-        do {
-            try sock.bind(toPort: 6969)
-            try sock.enableBroadcast(true)
-            try sock.beginReceiving()
-        }
-        catch
+        if let sock = self.sock
         {
-            print("Error setting up UDP")
+            do {
+                try sock.bind(toPort: 6969)
+                try sock.enableBroadcast(true)
+                try sock.beginReceiving()
+            }
+            catch
+            {
+                print("Error setting up UDP")
+            }
         }
         
-        let _ = Timer.scheduledTimer(withTimeInterval: 2.0, repeats: true) { timer in
+        self.healthTimer = Timer.scheduledTimer(withTimeInterval: 2.0, repeats: true) { timer in
             let interval = self.dataLastReceivedTime.timeIntervalSinceNow
             if (self.healthStatus == .healthy || self.healthStatus == .sick) && interval < -10 {
                 self.healthStatus = .dead
@@ -138,6 +144,21 @@ class EngineData: ObservableObject {
                 self.healthStatus = .sick
             }
             self.currentValues["health"] = self.healthStatus
+        }
+    }
+    
+    func stopData()
+    {
+        print("EngineData stopData()")
+        if let sock = self.sock
+        {
+            sock.close()
+            self.sock = nil
+        }
+        
+        if let healthTimer = self.healthTimer
+        {
+            healthTimer.invalidate()
         }
     }
     

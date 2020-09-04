@@ -17,6 +17,9 @@ struct CHTEGTGauge: View {
     var egtMaxValue:CGFloat
     var ranges:[Range]
     
+    @State private var showingLeanActionSheet = false
+    @State private var leaningMode = ""
+    
     @EnvironmentObject var engineData: EngineData
 
     private let textOffset:CGFloat = -10
@@ -48,32 +51,53 @@ struct CHTEGTGauge: View {
                             .strokeBorder(self.ranges[index].color, lineWidth: geometry.size.height*0.05)
                     }
                     ForEach(0..<4) { index in
-                        EGTBar(cylinderNum: index, currentPercent: Helper.currentCylinderValueAsCGFloat(cylinderIndex: index, valueType: .EGT, value: self.engineData.currentValues[self.dataKey])/self.egtMaxValue)
-                        .fill(Color.green)
+                        EGTBarView(cylinderNum: index,
+                                   currentPercent: Helper.currentCylinderValueAsCGFloat(cylinderIndex: index, valueType: .EGT, value: self.engineData.currentValues[self.dataKey])/self.egtMaxValue,
+                                   currentValue: Helper.currentCylinderValueAsString(cylinderIndex: index, valueType: .EGT, value: self.engineData.currentValues[self.dataKey]),
+                                   showText: true)
                     }
                     ForEach(0..<4) { index in
-                        CHTPointer(cylinderNum: index, currentPercent: Helper.currentCylinderValueAsCGFloat(cylinderIndex: index, valueType: .CHT, value: self.engineData.currentValues[self.dataKey])/self.chtMaxValue)
-                        .fill(Color.white)
+                        CHTPointerView(cylinderNum: index,
+                                       currentPercent: Helper.currentCylinderValueAsCGFloat(cylinderIndex: index, valueType: .CHT, value: self.engineData.currentValues[self.dataKey])/self.chtMaxValue,
+                                        currentValue: Helper.currentCylinderValueAsString(cylinderIndex: index, valueType: .CHT, value: self.engineData.currentValues[self.dataKey]),
+                                        showText: true)
                     }
                 }
                 HStack {
                     Text("EGT °F")
-                    .bold()
-                    .foregroundColor(.white)
-                    .font(.title)
-                    .offset(y: -10)
-                    .padding(.leading, 10.0)
-                    .frame(width: geometry.size.width*0.4, alignment: .leading)
-
+                        .bold()
+                        .foregroundColor(.white)
+                        .font(.title)
+                        .offset(y: -10)
+                        .padding(.leading, 10.0)
+                        .frame(alignment: .leading)
+//                    .frame(width: geometry.size.width*0.4, alignment: .leading)
+                    Text("\(self.leaningMode)")
+                        .bold()
+                        .foregroundColor(.white)
+                        .font(.title)
+                        .offset(y: -10)
+                        .frame(width: geometry.size.width*0.4, alignment: .center)
                     Text("\(Helper.maxCylinderValueAsString(valueType: .EGT, value: self.engineData.currentValues[self.dataKey]))")
-                    .bold()
-                    .foregroundColor(.white)
-                    .font(.title)
-                    .offset(y: -10)
-                    .frame(width: geometry.size.width*0.5, alignment: .trailing)
+                        .bold()
+                        .foregroundColor(.white)
+                        .font(.title)
+                        .offset(y: -10)
+                        .frame(alignment: .trailing)
+//                    .frame(width: geometry.size.width*0.5, alignment: .trailing)
                 }
             }
             .padding([.leading, .trailing], 5)
+        }
+        .onTapGesture {
+            self.showingLeanActionSheet = true
+        }
+        .actionSheet(isPresented: $showingLeanActionSheet) {
+            ActionSheet(title: Text("Choose Leaning Option"), message: Text("Select the leaning option"), buttons: [
+                .default(Text("LOP")) { self.leaningMode = "LOP" },
+                .default(Text("ROP")) { self.leaningMode = "ROP" },
+                .default(Text("None")) { self.leaningMode = "" }
+            ])
         }
     }
 }
@@ -123,6 +147,30 @@ struct BorderLine: InsettableShape {
     }
 }
 
+struct CHTPointerView: View {
+    var cylinderNum:Int
+    var currentPercent: CGFloat
+    var currentValue: String
+    var showText: Bool
+    var insetAmount: CGFloat = 0
+    
+    var body: some View {
+        GeometryReader { geometry in
+            ZStack {
+                CHTPointer(cylinderNum: self.cylinderNum, currentPercent: self.currentPercent)
+                    .fill(Color.white)
+                Text(self.currentValue)
+                    .bold()
+                    .foregroundColor(.white)
+                    .font(.headline)
+                    .offset(x: (geometry.size.width*CGFloat(0.12)) + (((geometry.size.width*CGFloat(0.86))/CGFloat(4))*CGFloat(self.cylinderNum)),
+                            y: geometry.size.height/CGFloat(2) - (geometry.size.height * self.currentPercent) + CGFloat(20))
+                    .frame(width: geometry.size.width*CGFloat(0.86), height: geometry.size.height, alignment: .leading)
+            }
+        }
+    }
+}
+
 struct CHTPointer: InsettableShape {
     var insetAmount: CGFloat = 0
     var cylinderNum:Int
@@ -153,6 +201,29 @@ struct CHTPointer: InsettableShape {
         path.closeSubpath()
 
         return path
+    }
+}
+
+struct EGTBarView: View {
+    var cylinderNum:Int
+    var currentPercent: CGFloat
+    var currentValue: String
+    var showText: Bool
+    var insetAmount: CGFloat = 0
+    
+    var body: some View {
+        GeometryReader { geometry in
+            ZStack {
+                EGTBar(cylinderNum: self.cylinderNum, currentPercent: self.currentPercent)
+                    .fill(Color.green)
+                Text(self.currentValue)
+                    .bold()
+                    .foregroundColor(.white)
+                    .font(.headline)
+                    .offset(x: (geometry.size.width*CGFloat(0.10)) + (((geometry.size.width*CGFloat(0.86))/CGFloat(4))*CGFloat(self.cylinderNum)), y: (geometry.size.height/CGFloat(2))-CGFloat(15))
+                    .frame(width: geometry.size.width*CGFloat(0.86), height: geometry.size.height, alignment: .leading)
+            }
+        }
     }
 }
 
