@@ -53,7 +53,8 @@ struct CHTEGTGauge: View {
                     ForEach(0..<4) { index in
                         EGTBarView(cylinderNum: index,
                                    currentPercent: Helper.currentCylinderValueAsCGFloat(cylinderIndex: index, valueType: .EGT, value: self.engineData.currentValues[self.dataKey])/self.egtMaxValue,
-                                   currentValue: Helper.currentCylinderValueAsString(cylinderIndex: index, valueType: .EGT, value: self.engineData.currentValues[self.dataKey]),
+                                   currentValueOrDelta: Helper.currentCylinderValueOrDeltaAsString(cylinderIndex: index, valueType: .EGT, value: self.engineData.currentValues[self.dataKey]),
+                                   leanNumber: Helper.currentCylinderLeanNumberAsString(cylinderIndex: index, valueType: .EGT, value: self.engineData.currentValues[self.dataKey]),
                                    showText: true)
                     }
                     ForEach(0..<4) { index in
@@ -69,35 +70,39 @@ struct CHTEGTGauge: View {
                         .foregroundColor(.white)
                         .font(.title)
                         .offset(y: -10)
-                        .padding(.leading, 10.0)
-                        .frame(alignment: .leading)
-//                    .frame(width: geometry.size.width*0.4, alignment: .leading)
+                        .padding(.leading, 7.0)
+                        .frame(width: geometry.size.width*0.3, alignment: .leading)
                     Text("\(self.leaningMode)")
                         .bold()
-                        .foregroundColor(.white)
-                        .font(.title)
+                        .foregroundColor(.yellow)
+                        .font(.headline)
                         .offset(y: -10)
-                        .frame(width: geometry.size.width*0.4, alignment: .center)
+                        .frame(width: geometry.size.width*0.45, alignment: .center)
                     Text("\(Helper.maxCylinderValueAsString(valueType: .EGT, value: self.engineData.currentValues[self.dataKey]))")
                         .bold()
                         .foregroundColor(.white)
                         .font(.title)
                         .offset(y: -10)
-                        .frame(alignment: .trailing)
-//                    .frame(width: geometry.size.width*0.5, alignment: .trailing)
+                        .padding(.trailing, 5.0)
+                        .frame(width: geometry.size.width*0.25, alignment: .leading)
                 }
             }
             .padding([.leading, .trailing], 5)
-        }
-        .onTapGesture {
-            self.showingLeanActionSheet = true
-        }
-        .actionSheet(isPresented: $showingLeanActionSheet) {
-            ActionSheet(title: Text("Choose Leaning Option"), message: Text("Select the leaning option"), buttons: [
-                .default(Text("LOP")) { self.leaningMode = "LOP" },
-                .default(Text("ROP")) { self.leaningMode = "ROP" },
-                .default(Text("None")) { self.leaningMode = "" }
-            ])
+            .onTapGesture {
+                self.showingLeanActionSheet = true
+            }
+            .actionSheet(isPresented: self.$showingLeanActionSheet) {
+                ActionSheet(title: Text("Choose Leaning Mode"), message: Text("Select the leaning mode"), buttons: [
+                    .default(Text("Lean Assist")) {
+                        self.leaningMode = "LEANING"
+                        self.engineData.leaningActive = true
+                    },
+                    .default(Text("None")) {
+                        self.leaningMode = ""
+                        self.engineData.leaningActive = false
+                    }
+                ])
+            }
         }
     }
 }
@@ -207,7 +212,8 @@ struct CHTPointer: InsettableShape {
 struct EGTBarView: View {
     var cylinderNum:Int
     var currentPercent: CGFloat
-    var currentValue: String
+    var currentValueOrDelta: String
+    var leanNumber: String
     var showText: Bool
     var insetAmount: CGFloat = 0
     
@@ -216,7 +222,13 @@ struct EGTBarView: View {
             ZStack {
                 EGTBar(cylinderNum: self.cylinderNum, currentPercent: self.currentPercent)
                     .fill(Color.green)
-                Text(self.currentValue)
+                Text(self.leanNumber)
+                    .bold()
+                    .foregroundColor(.white)
+                    .font(.title)
+                    .offset(x: (geometry.size.width*CGFloat(0.15)) + (((geometry.size.width*CGFloat(0.86))/CGFloat(4))*CGFloat(self.cylinderNum)), y: (geometry.size.height/CGFloat(2))-CGFloat(50))
+                    .frame(width: geometry.size.width*CGFloat(0.86), height: geometry.size.height, alignment: .leading)
+                Text(self.currentValueOrDelta)
                     .bold()
                     .foregroundColor(.white)
                     .font(.headline)

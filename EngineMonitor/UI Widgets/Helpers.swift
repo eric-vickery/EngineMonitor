@@ -10,7 +10,7 @@ import SwiftUI
 
 class Helper
 {
-    static func currentValueAsString(_ value: Any?) -> String
+    static func currentValueAsString(_ value: Any?, ignoreZero: Bool = false) -> String
     {
         var valueString = ""
         
@@ -22,6 +22,10 @@ class Helper
         }
         else if let value = value as? String {
             valueString = value
+        }
+        
+        if valueString == "0" && ignoreZero {
+            valueString = ""
         }
 
         return valueString
@@ -56,10 +60,19 @@ class Helper
         return percent
     }
 
+    static func currentCylinderValueOrDeltaAsString(cylinderIndex: Int, valueType: CylinderValueType, value: Any?) -> String
+    {
+        if let value = value as? ([CylinderValues], [CylinderValues]) {
+            return currentValueAsString((valueType == .CHT ? value.0 : value.1)[cylinderIndex].currentValueOrDelta)
+        }
+        
+        return ""
+    }
+    
     static func currentCylinderValueAsString(cylinderIndex: Int, valueType: CylinderValueType, value: Any?) -> String
     {
-        if let value = value as? ([Int], [Int]) {
-            return currentValueAsString((valueType == .CHT ? value.0 : value.1)[cylinderIndex])
+        if let value = value as? ([CylinderValues], [CylinderValues]) {
+            return currentValueAsString((valueType == .CHT ? value.0 : value.1)[cylinderIndex].currentValue)
         }
         
         return ""
@@ -67,8 +80,8 @@ class Helper
     
     static func currentCylinderValueAsCGFloat(cylinderIndex: Int, valueType: CylinderValueType, value: Any?) -> CGFloat
     {
-        if let value = value as? ([Int], [Int]) {
-            return currentValueAsCGFloat((valueType == .CHT ? value.0 : value.1)[cylinderIndex])
+        if let value = value as? ([CylinderValues], [CylinderValues]) {
+            return currentValueAsCGFloat((valueType == .CHT ? value.0 : value.1)[cylinderIndex].currentValue)
         }
         
         return 0.0
@@ -76,13 +89,22 @@ class Helper
     
     static func maxCylinderValueAsString(valueType: CylinderValueType, value: Any?) -> String
     {
-        if let value = value as? ([Int], [Int]) {
+        if let value = value as? ([CylinderValues], [CylinderValues]) {
             if valueType == .CHT {
-                return currentValueAsString(value.0.max())
+                return currentValueAsString(value.0.max()?.currentValue)
             }
             else {
-                return currentValueAsString(value.1.max())
+                return currentValueAsString(value.1.max()?.currentValue)
             }
+        }
+        
+        return ""
+    }
+    
+    static func currentCylinderLeanNumberAsString(cylinderIndex: Int, valueType: CylinderValueType, value: Any?) -> String
+    {
+        if let value = value as? ([CylinderValues], [CylinderValues]) {
+            return currentValueAsString((valueType == .CHT ? value.0 : value.1)[cylinderIndex].peakedNum, ignoreZero: true)
         }
         
         return ""

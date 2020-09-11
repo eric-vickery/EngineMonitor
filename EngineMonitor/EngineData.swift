@@ -16,11 +16,36 @@ enum HealthStatus {
     case dead
 }
 
+struct CylinderValues {
+    var currentValueOrDelta:Int
+    var maxValue:Int
+    var peakedNum:Int
+    var currentValue:Int
+}
+
+extension CylinderValues: Comparable {
+static func < (lhs: CylinderValues, rhs: CylinderValues) -> Bool
+    {
+    return lhs.currentValue < rhs.currentValue
+    }
+
+static func == (lhs: CylinderValues, rhs: CylinderValues) -> Bool
+    {
+        return lhs.currentValue == rhs.currentValue
+    }
+}
+
 class EngineData: ObservableObject {
     @Published var currentValues:[String: Any] = [String: Any]()
     @Published var tach:Int = 0
-    @Published var chtValues:[Int] = [0, 0, 0, 0]
-    @Published var egtValues:[Int] = [0, 0, 0, 0]
+    @Published var chtValues:[CylinderValues] = [CylinderValues(currentValueOrDelta: 0, maxValue: 0, peakedNum: 0, currentValue: 0),
+                                                 CylinderValues(currentValueOrDelta: 0, maxValue: 0, peakedNum: 0, currentValue: 0),
+                                                 CylinderValues(currentValueOrDelta: 0, maxValue: 0, peakedNum: 0, currentValue: 0),
+                                                 CylinderValues(currentValueOrDelta: 0, maxValue: 0, peakedNum: 0, currentValue: 0)]
+    @Published var egtValues:[CylinderValues] = [CylinderValues(currentValueOrDelta: 0, maxValue: 0, peakedNum: 0, currentValue: 0),
+                                                 CylinderValues(currentValueOrDelta: 0, maxValue: 0, peakedNum: 0, currentValue: 0),
+                                                 CylinderValues(currentValueOrDelta: 0, maxValue: 0, peakedNum: 0, currentValue: 0),
+                                                 CylinderValues(currentValueOrDelta: 0, maxValue: 0, peakedNum: 0, currentValue: 0)]
     @Published var volts:Double = 0.0
     @Published var fuelFlow:Double = 0.0
     @Published var internalTemp:Int = 0
@@ -36,6 +61,9 @@ class EngineData: ObservableObject {
     @Published var flightTime:String = ""
     @Published var endurance:String = ""
     @Published var healthStatus:HealthStatus = .dead
+    @Published var leaningActive:Bool = false
+    
+    private var mostRecentCylinderToPeak = 0
     
     private var dataLastReceivedTime = Date()
     private var dataLoastLoggedTime = Date()
@@ -44,6 +72,8 @@ class EngineData: ObservableObject {
     
     private var sock:GCDAsyncUdpSocket?
     private var healthTimer:Timer?
+    
+    let DELTA_FROM_MAX_FOR_PEAK_TO_HAPPEN = 7
 
     init(createTestData: Bool = false)
     {
@@ -164,6 +194,9 @@ class EngineData: ObservableObject {
     
     func parseData(data: Data)
     {
+        if self.leaningActive {
+            print("Leaning Mode")
+        }
         if data.count != 70 {
             // Bad data
             print("Bad data, count was \(data.count)")
@@ -173,10 +206,10 @@ class EngineData: ObservableObject {
         self.tach = Int(data[0]) << 8 | Int(data[1])
         self.currentValues["tach"] = self.tach
         for index in stride(from: 0, through: 6, by: 2) {
-            self.chtValues[index/2] = Int(data[2+index]) << 8 | Int(data[3+index])
+            updateCylinderValues(cylinderData: &self.chtValues[index/2], newValue: Int(data[2+index]) << 8 | Int(data[3+index]))
         }
         for index in stride(from: 0, through: 6, by: 2) {
-            self.egtValues[index/2] = Int(data[14+index]) << 8 | Int(data[15+index])
+            updateCylinderValues(cylinderData: &self.egtValues[index/2], newValue: Int(data[14+index]) << 8 | Int(data[15+index]))
         }
         self.currentValues["cylinderTemps"] = (self.chtValues, self.egtValues)
         self.volts = Double(Int(data[34]) << 8 | Int(data[35])) / 10.0
@@ -219,14 +252,14 @@ class EngineData: ObservableObject {
         
         // Only do logging every second
         if self.dataLoastLoggedTime.timeIntervalSinceNow < -1 && UserDefaults.standard.bool(forKey: "logging_enabled") {
-            let egt1 = Helper.currentValueAsString(self.egtValues[0])
-            let egt2 = Helper.currentValueAsString(self.egtValues[1])
-            let egt3 = Helper.currentValueAsString(self.egtValues[2])
-            let egt4 = Helper.currentValueAsString(self.egtValues[3])
-            let cht1 = Helper.currentValueAsString(self.chtValues[0])
-            let cht2 = Helper.currentValueAsString(self.chtValues[1])
-            let cht3 = Helper.currentValueAsString(self.chtValues[2])
-            let cht4 = Helper.currentValueAsString(self.chtValues[3])
+            let egt1 = Helper.currentValueAsString(self.egtValues[0].currentValue)
+            let egt2 = Helper.currentValueAsString(self.egtValues[1].currentValue)
+            let egt3 = Helper.currentValueAsString(self.egtValues[2].currentValue)
+            let egt4 = Helper.currentValueAsString(self.egtValues[3].currentValue)
+            let cht1 = Helper.currentValueAsString(self.chtValues[0].currentValue)
+            let cht2 = Helper.currentValueAsString(self.chtValues[1].currentValue)
+            let cht3 = Helper.currentValueAsString(self.chtValues[2].currentValue)
+            let cht4 = Helper.currentValueAsString(self.chtValues[3].currentValue)
             let oilTemp = Helper.currentValueAsString(self.oilTemp)
             let oilPressure = Helper.currentValueAsString(self.oilPressure)
             let rpm = Helper.currentValueAsString(self.tach)
@@ -239,6 +272,37 @@ class EngineData: ObservableObject {
             
             self.dataLoastLoggedTime = Date()
         }
+    }
+    
+    private func updateCylinderValues(cylinderData: inout CylinderValues, newValue: Int) {
+        cylinderData.currentValue = newValue
+        cylinderData.maxValue = max(newValue, cylinderData.maxValue)
+        cylinderData.currentValueOrDelta = newValue
+        
+        if self.leaningActive
+        {
+            cylinderData.maxValue = max(newValue, cylinderData.maxValue)
+            if cylinderData.peakedNum == 0 && didCylinderPeak(cylinderData.maxValue, cylinderData.currentValue)
+            {
+                self.mostRecentCylinderToPeak = self.mostRecentCylinderToPeak + 1
+                cylinderData.peakedNum = self.mostRecentCylinderToPeak
+            }
+            
+            if cylinderData.peakedNum != 0
+            {
+                cylinderData.currentValueOrDelta = cylinderData.currentValue - cylinderData.maxValue
+            }
+        }
+        else
+        {
+            self.mostRecentCylinderToPeak = 0
+            cylinderData.maxValue = 0
+            cylinderData.peakedNum = 0
+        }
+    }
+    
+    private func didCylinderPeak(_ maxValue: Int, _ currentValue: Int) -> Bool {
+        return currentValue < (maxValue - DELTA_FROM_MAX_FOR_PEAK_TO_HAPPEN)
     }
 }
 
