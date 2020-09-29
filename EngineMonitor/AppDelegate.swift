@@ -13,7 +13,25 @@ import CocoaAsyncSocket
 class AppDelegate: UIResponder, UIApplicationDelegate
 {
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
-        // Override point for customization after application launch.
+        
+        // This chunk is in here to get local network access working. It seems that CocoaAsyncSocket doesn't work correctly with local network access
+        let sessionConfig = URLSessionConfiguration.default
+        sessionConfig.waitsForConnectivity = true
+        sessionConfig.timeoutIntervalForResource = 60
+        let url: URL = URL(string: "https://localhost")!
+        print(url)
+        URLSession(configuration: sessionConfig)
+            .dataTask(with: URLRequest(url: url)) { data, response, error in
+            
+            if let response = response as? HTTPURLResponse {
+                print("Response code: \(response.statusCode)")
+            }
+            
+            if let error = error {
+                print(error.localizedDescription)
+            }
+            
+        }.resume()
         
         return true
     }
